@@ -4,14 +4,14 @@
 
 
 struct PState {
-    const unsigned short pHeight;
-    const unsigned short pWidth;
+    const unsigned int pHeight;
+    const unsigned int pWidth;
     const unsigned int pSize;
     unsigned int pPlacedPieces;
     unsigned int pOpenEdges;
     double pTotalMoves;
-    unsigned char *pState;  // State of the puzzle's placed pieces
-    unsigned char *pEdges; // Open locations for pieces 
+    unsigned char* pState;  // State of the puzzle's placed pieces
+    unsigned char* pEdges; // Open locations for pieces 
 };
 
 static unsigned int bigRand(unsigned int size)
@@ -26,7 +26,7 @@ static unsigned int bigRand(unsigned int size)
     }
     else if (size <= 0x17FFD)
     {
-        return ((rand() << 30) + (rand() << 15) + rand()) % size;
+        return ((rand() << 31) + (rand() << 15) + rand()) % size;
     }
     else
     {
@@ -40,17 +40,17 @@ static unsigned int bigRand(unsigned int size)
     }
 }
 
-static unsigned char* getStateByte(unsigned char* stateBits, unsigned short offset)
+static unsigned char* getStateByte(unsigned char* stateBits, unsigned int offset)
 {
     return stateBits + offset / 8;
 }
 
-static unsigned char getValueByte(unsigned short offset)
+static unsigned char getValueByte(unsigned int offset)
 {
     return 1 << (offset % 8);
 }
 
-static unsigned char isBitSet(unsigned char *stateByte, unsigned char setValue)
+static unsigned char isBitSet(unsigned char* stateByte, unsigned char setValue)
 {
     return (*stateByte & setValue) != 0;
 }
@@ -78,10 +78,10 @@ static void setBit(unsigned char* stateBits, unsigned char offset)
     updateStateBit(stateByte, setValue, 1);
 }
 
-static struct PState getPState(unsigned short pHeight, unsigned short pWidth)
+static struct PState getPState(unsigned int pHeight, unsigned int pWidth)
 {
     unsigned int pSize = pHeight * pWidth;
-    struct PState pState = {pHeight, pWidth, pSize, 0, 0};
+    struct PState pState = { pHeight, pWidth, pSize, 0, 0 };
 
     pState.pState = (unsigned char*)malloc(pSize);
     pState.pEdges = (unsigned char*)malloc(pSize);
@@ -97,7 +97,7 @@ static struct PState getPState(unsigned short pHeight, unsigned short pWidth)
     return pState;
 }
 
-static void safeAddEdge(struct PState *pState, unsigned short offset)
+static void safeAddEdge(struct PState* pState, unsigned int offset)
 {
     unsigned char* edgeByte = getStateByte(pState->pEdges, offset);
     unsigned char* stateByte = getStateByte(pState->pState, offset);
@@ -106,9 +106,9 @@ static void safeAddEdge(struct PState *pState, unsigned short offset)
         pState->pOpenEdges += updateStateBit(edgeByte, setValue, 1); // returns 1 on opening new edge, 0 if edge already open
 }
 
-static void addNewEdges(struct PState *pState, unsigned short stepIdx)
+static void addNewEdges(struct PState* pState, unsigned int stepIdx)
 {
-    unsigned short pCol = stepIdx % pState->pWidth;
+    unsigned int pCol = stepIdx % pState->pWidth;
     if (stepIdx >= pState->pWidth)  // not first row
     {
         safeAddEdge(pState, stepIdx - pState->pWidth);
@@ -127,10 +127,10 @@ static void addNewEdges(struct PState *pState, unsigned short stepIdx)
     }
 }
 
-static void stepSim(struct PState *pState)
+static void stepSim(struct PState* pState)
 {
     unsigned int piecesRemaining = pState->pSize - pState->pPlacedPieces;
-    if (pState->pOpenEdges == piecesRemaining) 
+    if (pState->pOpenEdges == piecesRemaining)
     {
         // If edges == pieces, then every piece is playable, each step will be 1 move and can be skipped
         pState->pOpenEdges = 0;
@@ -141,7 +141,7 @@ static void stepSim(struct PState *pState)
     unsigned char setValue = 0;
     unsigned char* edgeByte = NULL;
     unsigned char* stateByte = NULL;
-    unsigned short stepIdx = 0;
+    unsigned int stepIdx = 0;
     while (1)
     {
         stepIdx = bigRand(pState->pSize);
@@ -169,7 +169,7 @@ static void stepSim(struct PState *pState)
 }
 
 
-static struct PState runSim(unsigned short pWidth, unsigned short pHeight)
+static struct PState runSim(unsigned int pWidth, unsigned int pHeight)
 {
     struct PState pState = getPState(pWidth, pHeight);
     while (pState.pPlacedPieces < pState.pSize)
@@ -181,9 +181,9 @@ static struct PState runSim(unsigned short pWidth, unsigned short pHeight)
     return pState;
 }
 
-static void doTestRun(unsigned short pStartSize, unsigned short pEndSize, unsigned short iterCount, char* outFilePathPrefix)
+static void doTestRun(unsigned int pStartSize, unsigned int pEndSize, unsigned int iterCount, char* outFilePathPrefix)
 {
-    for (unsigned short pX = pStartSize; pX <= pEndSize; pX++)
+    for (unsigned int pX = pStartSize; pX <= pEndSize; pX++)
     {
         unsigned int size = pX * pX;
         char fileName[2048];
@@ -191,7 +191,7 @@ static void doTestRun(unsigned short pStartSize, unsigned short pEndSize, unsign
         printf("Starting test run: %d, %dx%d, %s \n", iterCount, pX, pX, fileName);
 
         long double totalCount = 0;
-        for (unsigned short i = 0; i < iterCount; i++) {
+        for (unsigned int i = 0; i < iterCount; i++) {
             struct PState pState = runSim(pX, pX);
             totalCount += pState.pTotalMoves;
         }
@@ -211,14 +211,14 @@ static void doTestRun(unsigned short pStartSize, unsigned short pEndSize, unsign
 
 static int main(int argc, char* argv[])
 {
-    unsigned short iterCount = 1;
-    unsigned short pStartSize = 182;
-    unsigned short pEndSize = 182;
+    unsigned int iterCount = 1;
+    unsigned int pStartSize = 1;
+    unsigned int pEndSize = 1;
     const char* outFilePathPrefix = "output";
     if (argc != 5)
     {
         printf("Usage  %s [iterCount] [pStartSize] [pEndSize] [outFilePathPrefix]\n", argv[0]);
-        //return -1;
+        return -1;
     }
     else
     {
