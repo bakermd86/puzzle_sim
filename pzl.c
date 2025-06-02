@@ -26,7 +26,7 @@ static unsigned int bigRand(unsigned int size)
     }
     else if (size <= 0x17FFD)
     {
-        return ((rand() << 31) + (rand() << 15) + rand()) % size;
+        return ((rand() << 30) + (rand() << 15) + rand()) % size;
     }
     else
     {
